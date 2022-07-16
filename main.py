@@ -3,8 +3,8 @@ import json
 #Global Variable
 jsonFile = open('data.json')
 data = json.load(jsonFile)
-orderList = [x for x in data["orders"]]
-orderIdList = [str(x["orderId"]) for x in orderList]
+orderList = [orders for orders in data["orders"]]
+orderIdList = [str(orderIds["orderId"]) for orderIds in orderList]
 
 def main():
     '''Initiate the script'''
@@ -23,8 +23,8 @@ def processOrders(selectedId: list[str]):
     '''Bulk of the order processing work'''
 
     #processOrders variables
-    productList = [x for x in data["products"]]
-    allItemsList = [x["items"] for x in orderList]
+    productList = [products for products in data["products"]]
+    allItemsList = [orderItems["items"] for orderItems in orderList]
     unfulfilledIdList = []
     productInfo1 = []
     productInfo2 = []
