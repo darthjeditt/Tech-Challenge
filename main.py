@@ -37,7 +37,7 @@ def main():
         print('No orders are to be run, thank you for using NOMSS order run tool.')
 
 
-def processOrders(selectedId: list[str]):
+def processOrders(selectedId = []):
     '''Bulk of the order processing work'''
 
     #processOrders variables
