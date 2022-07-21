@@ -3,95 +3,90 @@ import json
 #Global Variable
 jsonFile = open('data.json')
 data = json.load(jsonFile)
-orderList = [orders for orders in data["orders"]]
-orderIdList = [str(orderIds["orderId"]) for orderIds in orderList]
+
+
+class OrderItem:
+    '''Setup for data variables'''
+    orderList = [orders for orders in data["orders"]]
+    orderIdList = [str(orderIds["orderId"]) for orderIds in orderList]
+    productList = [products for products in data["products"]]
+
+    def singleItem(itemList = []) -> list:
+        orderList = [orders for orders in data["orders"]]
+        allItemsList = [items["items"] for items in orderList]
+        itemsList = []
+        for item in allItemsList:
+            itemId = [str(y["orderId"]) for y in item]
+            for selectedId in itemList:
+                if selectedId in itemId:
+                    itemsList.extend(item)
+        return itemsList
+
 
 def main():
     '''Initiate the script'''
 
-    print(orderIdList)
+    print(OrderItem.orderIdList)
+
     print('Please select which orders you would like to run, example input: 1122, 1123, 1124')
     orderRunQuestion = input()
     selectedId = list(orderRunQuestion.split(', '))
-    
-    if selectedId is not None and any(x in selectedId for x in orderIdList):
+    if selectedId is not None and all(x in OrderItem.orderIdList for x in selectedId):
         processOrders(selectedId)
     else:
         print('No orders are to be run, thank you for using NOMSS order run tool.')
+
 
 def processOrders(selectedId: list[str]):
     '''Bulk of the order processing work'''
 
     #processOrders variables
-    productList = [products for products in data["products"]]
-    allItemsList = [orderItems["items"] for orderItems in orderList]
     unfulfilledIdList = []
-    productInfo1 = []
-    productInfo2 = []
-    productInfo3 = []
-    productQuant1 = 0
-    productQuant2 = 0
-    productQuant3 = 0
-    orderStatus = ''
 
     #Assigning each product quantity to a variable
-    for info in productList:
-        productId = str(info["productId"])
-        for id in productId:
-            if '1' in id:
-                productInfo1 = info
-                productQuant1 = int(productInfo1["quantityOnHand"])
-            elif '2' in id:
-                productInfo2 = info
-                productQuant2 = int(productInfo2["quantityOnHand"])
-            else:
-                productInfo3 = info
-                productQuant3 = int(productInfo3["quantityOnHand"])
-    
+    productQuant1 = next((x["quantityOnHand"] for x in OrderItem.productList if x["productId"] == 1), None)
+    productQuant2 = next((x["quantityOnHand"] for x in OrderItem.productList if x["productId"] == 2), None)
+    productQuant3 = next((x["quantityOnHand"] for x in OrderItem.productList if x["productId"] == 3), None)
+    orderQuant1 = next((x["quantity"] for x in OrderItem.singleItem(selectedId) if x["productId"] == 1), None)
+    orderQuant2 = next((x["quantity"] for x in OrderItem.singleItem(selectedId) if x["productId"] == 2), None)
+    orderQuant3 = next((x["quantity"] for x in OrderItem.singleItem(selectedId) if x["productId"] == 3), None)
+
     #Begin processing the order(s)
     print(f'Running through your orders {selectedId}')   
-    for orderId in selectedId:  
-        for itemInfo in orderList:
-            if orderId in str(itemInfo["orderId"]):
-                orderStatus = str(itemInfo["status"])
-                for items in allItemsList:
-                    itemsId = [str(id["orderId"]) for id in items]
-                    if orderId in [x for x in itemsId]:
-                        for item in items:
-                            itemList = str(item["productId"])
-                            itemQuant = int(item["quantity"])
-                            for itemId in itemList:
-                                if '1' == itemId:                                    
-                                    if int(productQuant1) < itemQuant:
-                                        orderStatus = 'Unfulfilled'
-                                        orderStatus 
-                                        reOrders()
-                                        if orderId not in [x for x in unfulfilledIdList]: 
-                                            unfulfilledIdList.append(orderId)
-                                    else:
-                                        productQuant1 = str(int(productQuant1) - int(itemQuant))
-                                elif '2' == itemId:
-                                    if int(productQuant2) < itemQuant:
-                                        orderStatus = 'Unfulfilled'
-                                        orderStatus 
-                                        reOrders()
-                                        if orderId not in [x for x in unfulfilledIdList]:
-                                            unfulfilledIdList.append(orderId)
-                                    else:
-                                        productQuant2 = str(int(productQuant2) - int(itemQuant))
-                                elif '3' == itemId:
-                                    if int(productQuant3) < itemQuant:
-                                        orderStatus = 'Unfulfilled'
-                                        orderStatus
-                                        reOrders()
-                                        if orderId not in [x for x in unfulfilledIdList]: 
-                                            unfulfilledIdList.append(orderId)
-                                    else:
-                                        productQuant3 = str(int(productQuant3) - int(itemQuant))
+
+    for i in range(len(OrderItem.singleItem(selectedId))):
+        singleOrderId = OrderItem.singleItem(selectedId)[i]["orderId"]
+        orderStatus = next((x["status"] for x in OrderItem.orderList if x["orderId"] == singleOrderId), None)
+        if OrderItem.singleItem(selectedId)[i]["productId"] == 1:
+            if productQuant1 < orderQuant1:
+                orderStatus = 'Unfulfilled'
+                orderStatus
+                reOrders()
+                if singleOrderId not in [x for x in unfulfilledIdList]: 
+                    unfulfilledIdList.append(singleOrderId)
+            else:
+                productQuant1 -= orderQuant1
+        elif OrderItem.singleItem(selectedId)[i]["productId"] == 2:
+            if productQuant2 < orderQuant2:
+                orderStatus = 'Unfulfilled'
+                orderStatus
+                reOrders()
+                if singleOrderId not in [x for x in unfulfilledIdList]: 
+                    unfulfilledIdList.append(singleOrderId)
+            else:
+                productQuant2 -= orderQuant2
+        elif OrderItem.singleItem(selectedId)[i]["productId"] == 3:
+            if productQuant3 < orderQuant3:
+                orderStatus = 'Unfulfilled'
+                orderStatus
+                reOrders()
+                if singleOrderId not in [x for x in unfulfilledIdList]: 
+                    unfulfilledIdList.append(singleOrderId)
+            else:
+                productQuant3 -= orderQuant3
 
     if unfulfilledIdList != []:
         print(f'Some orders have been unfulfilled and are being re-stocked, These orders are: {unfulfilledIdList}\nThank you for using NOMSS order run tool.')
-
     else:
         print('All orders have been fulfilled, Thank you for using NOMSS order run tool.')
 
